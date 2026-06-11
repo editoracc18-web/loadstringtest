@@ -1,0 +1,6 @@
+local SG = Instance.new("ScreenGui")
+local F = Instance.new("Frame")
+SG.Parent = game.Players.LocalPlayer.PlayerGui
+F.Parent = SG
+F.AnchorPoint = Vector2.new(0.5, 0.5)
+F.Position = UDim2.new(0.5, 0, 0.5, 0)
