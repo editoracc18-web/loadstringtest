@@ -1,6 +1,93 @@
-local SG = Instance.new("ScreenGui")
-local F = Instance.new("Frame")
-SG.Parent = game.Players.LocalPlayer.PlayerGui
-F.Parent = SG
-F.AnchorPoint = Vector2.new(0.5, 0.5)
-F.Position = UDim2.new(0.5, 0, 0.5, 0)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "RotationTimer"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 250, 0, 120)
+frame.Position = UDim2.new(0, 20, 0, 20)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.Parent = gui
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0,220,0,40)
+button.Position = UDim2.new(0,15,0,10)
+button.Text = "Select Part"
+button.Parent = frame
+
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(0,220,0,40)
+label.Position = UDim2.new(0,15,0,60)
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.new(1,1,1)
+label.Text = "No part selected"
+label.Parent = frame
+
+local selecting = false
+local selectedPart
+
+button.MouseButton1Click:Connect(function()
+	selecting = true
+	button.Text = "Click a Part"
+end)
+
+mouse.Button1Down:Connect(function()
+	if selecting and mouse.Target then
+		selectedPart = mouse.Target
+		selecting = false
+		button.Text = selectedPart.Name
+		label.Text = "Waiting for rotation..."
+	end
+end)
+
+local timing = false
+local startTime = 0
+local accumulated = 0
+local lastAngle
+
+RunService.RenderStepped:Connect(function()
+	if not selectedPart then
+		return
+	end
+
+	local angle = selectedPart.Orientation.Y
+
+	if lastAngle then
+		local delta = angle - lastAngle
+
+		if delta > 180 then
+			delta -= 360
+		elseif delta < -180 then
+			delta += 360
+		end
+
+		local speed = math.abs(delta)
+
+		if speed > 0.05 then
+			if not timing then
+				timing = true
+				startTime = os.clock()
+				accumulated = 0
+				label.Text = "Timing..."
+			end
+
+			accumulated += math.abs(delta)
+
+			if accumulated >= 360 then
+				local elapsed = os.clock() - startTime
+				label.Text = string.format("%.6f seconds", elapsed)
+				timing = false
+				accumulated = 0
+			end
+		end
+	end
+
+	lastAngle = angle
+end)
